@@ -2,16 +2,15 @@ from buildbot.config import BuilderConfig
 from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
 from buildbot.changes.gitpoller import GitPoller
-from buildbot.plugins import util, status
+from buildbot.plugins import util, reporters
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Interpolate
 from buildbot.schedulers import basic
-from buildbot.status import results
+from buildbot.process import results
 from buildbot.steps.source.git import Git
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.transfer import FileDownload
 
-from buildbot_ros_cfg.git_pr_poller import GitPRPoller
 from buildbot_ros_cfg.helpers import success
 
 
@@ -64,14 +63,14 @@ def ros_testbuild(c, job_name, url, branch, distro, arch, rosdistro, machines,
     if token:
         project_name = '_'.join([job_name, rosdistro, 'prtestbuild'])
         c['change_source'].append(
-            GitPRPoller(name=rosdistro+"_pr_poller",
+            GitPoller(name=rosdistro+"_pr_poller",
                         repourl=url, # this may pose some problems
                         project=project_name,
                         token=token,
                         pollInterval=15))
         # parse repo_url git@github:author/repo.git to repoOwner, repoName
         r_owner, r_name = (url.split(':')[1])[:-4].split('/')
-        c['status'].append(status.GitHubStatus(token=token,
+        c['status'].append(reporters.GitHubStatus(token=token,
                                                repoOwner=r_owner,
                                                repoName=r_name))
     else:

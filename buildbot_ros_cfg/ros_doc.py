@@ -50,7 +50,7 @@ def ros_docbuild(c, job_name, url, branch, distro, arch, rosdistro, machines, ot
         FileDownload(
             name = job_name+'-grab-script',
             mastersrc = 'scripts/docbuild.py',
-            slavedest = Interpolate('%(prop:workdir)s/docbuild.py'),
+            workerdest = Interpolate('%(prop:workdir)s/docbuild.py'),
             hideStepIf = success
         )
     )

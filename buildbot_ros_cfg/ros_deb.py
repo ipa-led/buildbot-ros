@@ -6,7 +6,7 @@ from buildbot.steps.shell import ShellCommand, SetPropertyFromCommand
 from buildbot.steps.transfer import FileUpload, FileDownload
 from buildbot.steps.trigger import Trigger
 from buildbot.steps.master import MasterShellCommand
-from buildbot.steps.slave import RemoveDirectory
+from buildbot.steps.worker import RemoveDirectory
 from buildbot.schedulers import triggerable
 
 from helpers import success
@@ -92,7 +92,7 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
             FileUpload(
                 name = package+'-uploadsource',
                 slavesrc = Interpolate('%(prop:workdir)s/'+deb_name+'.dsc'),
-                masterdest = Interpolate('sourcedebs/'+deb_name+'.dsc'),
+                masterdest = 'sourcedebs/'+deb_name+'.dsc',
                 hideStepIf = success
             )
         )
@@ -139,10 +139,10 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
             ShellCommand(
                 haltOnFailure = True,
                 name = package+'-buildbinary',
-                command = [Interpolate('%(prop:workdir)s/build_binary_deb.py'), debian_pkg,
-                    Interpolate('%(prop:release_version)s'), distro, Interpolate('%(prop:workdir)s')] + gbp_args,
+                command = [Interpolate('%(prop:builddir)s/build_binary_deb.py'), debian_pkg,
+                    Interpolate('%(prop:release_version)s'), distro, Interpolate('%(prop:builddir)s')] + gbp_args,
                 env = {'DIST': distro,
-                       'GIT_PBUILDER_OPTIONS': Interpolate('--hookdir %(prop:workdir)s/hooks --override-config'),
+                       'GIT_PBUILDER_OPTIONS': Interpolate('--hookdir %(prop:builddir)s/hooks --override-config'),
                        'OTHERMIRROR': othermirror },
                 descriptionDone = ['binarydeb', package]
             )
@@ -152,7 +152,7 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
             FileUpload(
                 name = package+'-uploadbinary',
                 slavesrc = Interpolate('%(prop:workdir)s/'+final_name),
-                masterdest = Interpolate('binarydebs/'+final_name),
+                masterdest = 'binarydebs/'+final_name,
                 hideStepIf = success
             )
         )
