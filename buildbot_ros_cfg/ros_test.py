@@ -1,47 +1,16 @@
 from buildbot.config import BuilderConfig
-from buildbot.changes import base
-from buildbot.changes.filter import ChangeFilter
 from buildbot.changes.gitpoller import GitPoller
-from buildbot.plugins import util, reporters
+from buildbot.plugins import util, schedulers
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Interpolate
-from buildbot.schedulers import basic
 from buildbot.process import results
 from buildbot.steps.source.git import Git
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.transfer import FileDownload
 
 from buildbot_ros_cfg.helpers import success
+from buildbot_ros_cfg.git_pr_poller import GitPRPoller
 
-
-## @brief Work around for GitPoller not allowing two instances
-class NamedGitPoller(GitPoller):
-    def __init__(self, repourl, name, branches=None, branch=None,
-                 workdir=None, pollInterval=10*60,
-                 gitbin='git', usetimestamps=True,
-                 category=None, project=None,
-                 encoding='utf-8'):
-        base.PollingChangeSource.__init__(self, name=name+'_'+repourl,
-                pollInterval=pollInterval)
-
-        if branch and branches:
-            config.error("NamedGitPoller: can't specify both branch and branches")
-        elif branch:
-            branches = [branch]
-        elif not branches:
-            branches = ['master']
-
-        self.repourl = repourl
-        self.branches = branches
-        self.encoding = encoding
-        self.gitbin = gitbin
-        self.workdir = workdir
-        self.usetimestamps = usetimestamps
-        self.category = category
-        self.project = project
-        self.changeCount = 0
-        self.lastRev = {}
-        self.workdir = name+'_gitpoller-work'
 
 ## @brief Testbuild jobs are used for CI testing of the source repo.
 ## @param c The Buildmasterconfig
@@ -55,45 +24,55 @@ class NamedGitPoller(GitPoller):
 ## @param othermirror Cowbuilder othermirror parameter
 ## @param keys List of keys that cowbuilder will need
 def ros_testbuild(c, job_name, url, branch, distro, arch, rosdistro, machines, 
-                  othermirror, keys, token=None):
+                  othermirror, keys, source=True):
 
-    # Change source is either GitPoller or GitPRPoller
-    # TODO: make this configurable for svn/etc
-    project_name = ''
-    if token:
-        project_name = '_'.join([job_name, rosdistro, 'prtestbuild'])
-        c['change_source'].append(
-            GitPoller(name=rosdistro+"_pr_poller",
-                        repourl=url, # this may pose some problems
-                        project=project_name,
-                        token=token,
-                        pollInterval=15))
-        # parse repo_url git@github:author/repo.git to repoOwner, repoName
-        r_owner, r_name = (url.split(':')[1])[:-4].split('/')
-        c['status'].append(reporters.GitHubStatus(token=token,
-                                               repoOwner=r_owner,
-                                               repoName=r_name))
-    else:
+    # Create a Job for Source
+    
+    if source:
         project_name = '_'.join([job_name, rosdistro, 'testbuild'])
         c['change_source'].append(
-            NamedGitPoller(
+            GitPoller(
                 repourl=url,
-                name=rosdistro,
+                name=url,
                 branch=branch,
-                project=project_name
+                category=project_name,
+                pollAtLaunch=True,
+            )
+        )
+        c['schedulers'].append(
+            schedulers.SingleBranchScheduler(
+                name=project_name,
+                builderNames=[project_name,],
+                change_filter=util.ChangeFilter(category=project_name)
+            )  
+        )
+    else:
+        r_owner, r_name = (url.split(':')[1])[:-4].split('/')
+        project_name = '_'.join([job_name, rosdistro, 'pr_testbuild'])
+        c['change_source'].append(
+            GitPRPoller(
+                owner=r_owner,
+                repo=r_name,
+                category=project_name,
+                branches=[branch],
+                pollInterval=10*60,
+                pollAtLaunch=True,
+                token=util.Secret("OathToken"),
+                repository_type='ssh'
             )
         )
 
-    c['schedulers'].append(
-        basic.SingleBranchScheduler(
-            name=project_name,
-            builderNames=[project_name,],
-            change_filter=ChangeFilter(project=project_name)
+        c['schedulers'].append(
+            schedulers.SingleBranchScheduler(
+                name=project_name,
+                builderNames=[project_name,],
+                change_filter=util.ChangeFilter(category=project_name)
+            )
         )
-    )
-
+        
     # Directory which will be bind-mounted
     binddir = '/tmp/'+project_name
+    
 
     f = BuildFactory()
     # Remove any old crud in /tmp folder
@@ -118,7 +97,7 @@ def ros_testbuild(c, job_name, url, branch, distro, arch, rosdistro, machines,
         FileDownload(
             name=job_name+'-grab-script',
             mastersrc='scripts/testbuild.py',
-            slavedest=Interpolate('%(prop:workdir)s/testbuild.py'),
+            workerdest=Interpolate('%(prop:builddir)s/testbuild.py'),
             hideStepIf=success
         )
     )
@@ -131,10 +110,10 @@ def ros_testbuild(c, job_name, url, branch, distro, arch, rosdistro, machines,
     )
     # Make and run tests in a cowbuilder
     f.addStep(
-        TestBuild(
+        ShellCommand(
             name=job_name+'-build',
             command=['sudo', 'cowbuilder', '--execute',
-                     Interpolate('%(prop:workdir)s/testbuild.py'),
+                     Interpolate('%(prop:builddir)s/testbuild.py'),
                      '--distribution', distro, '--architecture', arch,
                      '--bindmounts', binddir, '--basepath',
                      '/var/cache/pbuilder/base-'+distro+'-'+arch+'.cow',
@@ -147,18 +126,21 @@ def ros_testbuild(c, job_name, url, branch, distro, arch, rosdistro, machines,
     c['builders'].append(
         BuilderConfig(
             name=project_name,
-            slavenames=machines,
+            workernames=machines,
             factory=f
         )
     )
     # return the name of the job created
     return project_name
 
+
+
 ## @brief ShellCommand w/overloaded evaluateCommand so that tests can be Warn
 class TestBuild(ShellCommand):
     warnOnWarnings = True
 
     def evaluateCommand(self, cmd):
+        
         if cmd.didFail():
             # build failed
             return results.FAILURE

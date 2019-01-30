@@ -34,11 +34,12 @@ rosdistro, package, release_version, workdir = sys.argv[1:5]
 gbp_args = sys.argv[5:]
 
 try:
-    subfolders = _get_package_subfolders(workdir, debian_pkg)
+    subfolders = _get_package_subfolders(workdir, package)
     assert len(subfolders) == 1, subfolders
     sources_dir = subfolders[0]
 except:
     sources_dir=workdir+'/build'
+    print(sources_dir)
 
 cmd = ['gbp', 'buildpackage',
     '--git-ignore-new',

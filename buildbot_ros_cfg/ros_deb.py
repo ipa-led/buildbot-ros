@@ -32,7 +32,7 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
     f.addStep(
         RemoveDirectory(
             name = job_name+'-clean',
-            dir = Interpolate('%(prop:workdir)s'),
+            dir = Interpolate('%(prop:builddir)s'),
             hideStepIf = success,
         )
     )
@@ -72,7 +72,7 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
             FileDownload(
                 name = job_name+'-grab-build-source-deb-script',
                 mastersrc = 'scripts/build_source_deb.py',
-                slavedest = Interpolate('%(prop:workdir)s/build_source_deb.py'),
+                workerdest = Interpolate('%(prop:builddir)s/build_source_deb.py'),
                 mode = 0755,
                 hideStepIf = success
             )
@@ -82,8 +82,8 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
             ShellCommand(
                 haltOnFailure = True,
                 name = package+'-buildsource',
-                command= [Interpolate('%(prop:workdir)s/build_source_deb.py'),
-                    rosdistro, package, Interpolate('%(prop:release_version)s'), Interpolate('%(prop:workdir)s')] + gbp_args,
+                command= [Interpolate('%(prop:builddir)s/build_source_deb.py'),
+                    rosdistro, package, Interpolate('%(prop:release_version)s'), Interpolate('%(prop:builddir)s')] + gbp_args,
                 descriptionDone = ['sourcedeb', package]
             )
         )
@@ -91,8 +91,8 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
         f.addStep(
             FileUpload(
                 name = package+'-uploadsource',
-                slavesrc = Interpolate('%(prop:workdir)s/'+deb_name+'.dsc'),
-                masterdest = 'sourcedebs/'+deb_name+'.dsc',
+                workersrc = Interpolate('%(prop:builddir)s/'+deb_name+'.dsc'),
+                masterdest = Interpolate('sourcedebs/'+deb_name+'.dsc'),
                 hideStepIf = success
             )
         )
@@ -119,7 +119,7 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
             FileDownload(
                 name = package+'-grab-hooks',
                 mastersrc = 'hooks/D05deps',
-                slavedest = Interpolate('%(prop:workdir)s/hooks/D05deps'),
+                workerdest = Interpolate('%(prop:builddir)s/hooks/D05deps'),
                 hideStepIf = success,
                 mode = 0777 # make this executable for the cowbuilder
             )
@@ -129,7 +129,7 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
             FileDownload(
                 name = job_name+'-grab-build-binary-deb-script',
                 mastersrc = 'scripts/build_binary_deb.py',
-                slavedest = Interpolate('%(prop:workdir)s/build_binary_deb.py'),
+                workerdest = Interpolate('%(prop:builddir)s/build_binary_deb.py'),
                 mode = 0755,
                 hideStepIf = success
             )
@@ -151,8 +151,8 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
         f.addStep(
             FileUpload(
                 name = package+'-uploadbinary',
-                slavesrc = Interpolate('%(prop:workdir)s/'+final_name),
-                masterdest = 'binarydebs/'+final_name,
+                workersrc = Interpolate('%(prop:builddir)s/'+final_name),
+                masterdest = Interpolate('binarydebs/'+final_name),
                 hideStepIf = success
             )
         )
@@ -192,7 +192,7 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
         BuilderConfig(
             name = job_name+'_'+rosdistro+'_'+distro+'_'+arch+'_debbuild',
             properties = {'release_version' : version},
-            slavenames = machines,
+            workernames = machines,
             factory = f
         )
     )

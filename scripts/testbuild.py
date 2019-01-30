@@ -212,7 +212,7 @@ def get_ros_env(setup_file):
 
 ## @brief modified version of function found in jenkins-scripts/common.py
 def apt_get_install(pkgs, sudo=False):
-    cmd = ['apt-get', 'install', '--yes']
+    cmd = ['apt-get', 'install', '--yes', '--allow-unauthenticated']
     if sudo:
         cmd = ['sudo', ] + cmd
 

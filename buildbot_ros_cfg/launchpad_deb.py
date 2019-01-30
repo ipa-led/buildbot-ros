@@ -34,7 +34,7 @@ def launchpad_debbuild(c, package, version, binaries, url, distro, arch, machine
         FileDownload(
             name = package+'-grab-hooks',
             mastersrc = 'hooks/D05deps',
-            slavedest = Interpolate('%(prop:workdir)s/hooks/D05deps'),
+            workerdest = Interpolate('%(prop:builddir)s/hooks/D05deps'),
             hideStepIf = success,
             mode = 0777 # make this executable for the cowbuilder
         )
@@ -55,8 +55,8 @@ def launchpad_debbuild(c, package, version, binaries, url, distro, arch, machine
                        '--build', package+'_'+version+'.dsc',
                        '--distribution', distro, '--architecture', arch,
                        '--basepath', '/var/cache/pbuilder/base-'+distro+'-'+arch+'.cow',
-                       '--buildresult', Interpolate('%(prop:workdir)s'),
-                       '--hookdir', Interpolate('%(prop:workdir)s/hooks'),
+                       '--buildresult', Interpolate('%(prop:builddir)s'),
+                       '--hookdir', Interpolate('%(prop:builddir)s/hooks'),
                        '--othermirror', othermirror,
                        '--override-config'],
             descriptionDone = ['built binary debs', ]
@@ -69,7 +69,7 @@ def launchpad_debbuild(c, package, version, binaries, url, distro, arch, machine
             f.addStep(
                 FileUpload(
                     name = deb_name+'-upload',
-                    slavesrc = Interpolate('%(prop:workdir)s/'+debian_pkg),
+                    workersrc = Interpolate('%(prop:builddir)s/'+debian_pkg),
                     masterdest = Interpolate('binarydebs/'+debian_pkg),
                     hideStepIf = success
                 )
@@ -89,7 +89,7 @@ def launchpad_debbuild(c, package, version, binaries, url, distro, arch, machine
     c['builders'].append(
         BuilderConfig(
             name = package+'_'+distro+'_'+arch+'_debbuild',
-            slavenames = machines,
+            workernames = machines,
             factory = f
         )
     )

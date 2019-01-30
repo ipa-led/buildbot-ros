@@ -50,7 +50,7 @@ def ros_docbuild(c, job_name, url, branch, distro, arch, rosdistro, machines, ot
         FileDownload(
             name = job_name+'-grab-script',
             mastersrc = 'scripts/docbuild.py',
-            workerdest = Interpolate('%(prop:workdir)s/docbuild.py'),
+            workerdest = Interpolate('%(prop:builddir)s/docbuild.py'),
             hideStepIf = success
         )
     )
@@ -66,7 +66,7 @@ def ros_docbuild(c, job_name, url, branch, distro, arch, rosdistro, machines, ot
         ShellCommand(
             haltOnFailure = True,
             name = job_name+'-docbuild',
-            command = ['sudo', 'cowbuilder', '--execute', Interpolate('%(prop:workdir)s/docbuild.py'),
+            command = ['sudo', 'cowbuilder', '--execute', Interpolate('%(prop:builddir)s/docbuild.py'),
                        '--distribution', distro, '--architecture', arch,
                        '--bindmounts', binddir,
                        '--basepath', '/var/cache/pbuilder/base-'+distro+'-'+arch+'.cow',
@@ -79,7 +79,7 @@ def ros_docbuild(c, job_name, url, branch, distro, arch, rosdistro, machines, ot
     f.addStep(
         DirectoryUpload(
             name = job_name+'-upload',
-            slavesrc = binddir+'/docs',
+            workersrc = binddir+'/docs',
             masterdest = 'docs/' + rosdistro,
             hideStepIf = success
         )
@@ -104,7 +104,7 @@ def ros_docbuild(c, job_name, url, branch, distro, arch, rosdistro, machines, ot
     c['builders'].append(
         BuilderConfig(
             name = job_name+'_'+rosdistro+'_docbuild',
-            slavenames = machines,
+            workernames = machines,
             factory = f
         )
     )
