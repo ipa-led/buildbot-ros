@@ -193,7 +193,7 @@ class RosDistroOracle:
 ## @param distro The distro to configure for ('groovy', 'hydro', etc)
 ## @param builders list of builders that this job can run on
 ## @returns A list of debbuilder names created
-def debbuilders_from_rosdistro(c, oracle, distro, builders):
+def debbuilders_from_rosdistro(c, oracle, distro, builders, locks):
     rel = get_release_file(oracle.getIndex(), distro)
     build_files = get_release_build_files(oracle.getIndex(), distro)
     jobs = list()
@@ -225,7 +225,7 @@ def debbuilders_from_rosdistro(c, oracle, distro, builders):
                                                  builders,
                                                  oracle.getOtherMirror('release', distro, code_name),
                                                  oracle.getKeys('release', distro),
-                                                 oracle.getDebTrigger(name, distro)))
+                                                 oracle.getDebTrigger(name, distro), locks))
     return jobs
 
 ## @brief Create testbuilders from source file
@@ -235,7 +235,7 @@ def debbuilders_from_rosdistro(c, oracle, distro, builders):
 ## @param builders list of builders that this job can run on
 ## @param tokens A dictionary of repo -> oauth_tokens, used for PR builders
 ## @returns A list of debbuilder names created
-def testbuilders_from_rosdistro(c, oracle, distro, builders):
+def testbuilders_from_rosdistro(c, oracle, distro, builders, locks):
 
     source = get_source_file(oracle.getIndex(), distro)
     build_files = get_source_build_files(oracle.getIndex(), distro)
@@ -258,7 +258,7 @@ def testbuilders_from_rosdistro(c, oracle, distro, builders):
                                                   distro,
                                                   builders,
                                                   oracle.getOtherMirror('source', distro, code_name),
-                                                  oracle.getKeys('source', distro), True))
+                                                  oracle.getKeys('source', distro), True, locks))
 
                         print('Configuring PR job for: %s_%s_%s' % (name, code_name, arch))
                         jobs.append(ros_testbuild(c,
@@ -270,7 +270,7 @@ def testbuilders_from_rosdistro(c, oracle, distro, builders):
                                                     distro,
                                                     builders,
                                                     oracle.getOtherMirror('source', distro, code_name),
-                                                    oracle.getKeys('source', distro), False))
+                                                    oracle.getKeys('source', distro), False, locks))
 
     return jobs
 

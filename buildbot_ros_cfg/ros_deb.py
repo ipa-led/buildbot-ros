@@ -24,7 +24,7 @@ from helpers import success
 ## @param othermirror Cowbuilder othermirror parameter
 ## @param keys List of keys that cowbuilder will need
 ## @param trigger_pkgs List of packages names to trigger after our build is done.
-def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, machines, othermirror, keys, trigger_pkgs = None):
+def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, machines, othermirror, keys, trigger_pkgs = None, locks=[]):
     gbp_args = ['-uc', '-us', '--git-ignore-branch', '--git-ignore-new',
                 '--git-verbose', '--git-dist='+distro, '--git-arch='+arch]
     f = BuildFactory()
@@ -193,7 +193,8 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
             name = job_name+'_'+rosdistro+'_'+distro+'_'+arch+'_debbuild',
             properties = {'release_version' : version},
             workernames = machines,
-            factory = f
+            factory = f,
+            locks=locks
         )
     )
     # return name of builder created

@@ -24,7 +24,7 @@ from buildbot_ros_cfg.git_pr_poller import GitPRPoller
 ## @param othermirror Cowbuilder othermirror parameter
 ## @param keys List of keys that cowbuilder will need
 def ros_testbuild(c, job_name, url, branch, distro, arch, rosdistro, machines, 
-                  othermirror, keys, source=True):
+                  othermirror, keys, source=True, locks=[]):
 
     # Create a Job for Source
     
@@ -127,7 +127,8 @@ def ros_testbuild(c, job_name, url, branch, distro, arch, rosdistro, machines,
         BuilderConfig(
             name=project_name,
             workernames=machines,
-            factory=f
+            factory=f,
+            locks=locks
         )
     )
     # return the name of the job created
