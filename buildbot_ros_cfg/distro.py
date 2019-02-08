@@ -239,17 +239,17 @@ def testbuilders_from_rosdistro(c, oracle, distro, builders, locks):
 
     source = get_source_file(oracle.getIndex(), distro)
     build_files = get_source_build_files(oracle.getIndex(), distro)
-    jobs = list()
+    jobs_sources = list()
+    jobs_pr = list()
     for name in source.repositories.keys():
         if source.repositories[name].type != 'git':
-            print('Cannot configure ros_debbuild for %s, as it is not a git repository' % name)
+            print('Cannot configure source build for %s, as it is not a git repository' % name)
             continue
         for build_file in build_files:
             for os in build_file.get_target_os_names():
                 for code_name in build_file.get_target_os_code_names(os):
                     for arch in build_file.get_target_arches(os, code_name):
-                        print('Configuring ros_testbuild job for: %s_%s_%s' % (name, code_name, arch))
-                        jobs.append(ros_testbuild(c,
+                        jobs_sources.append(ros_testbuild(c,
                                                   name,
                                                   source.repositories[name].url,
                                                   source.repositories[name].version,  # branch
@@ -260,8 +260,7 @@ def testbuilders_from_rosdistro(c, oracle, distro, builders, locks):
                                                   oracle.getOtherMirror('source', distro, code_name),
                                                   oracle.getKeys('source', distro), True, locks))
 
-                        print('Configuring PR job for: %s_%s_%s' % (name, code_name, arch))
-                        jobs.append(ros_testbuild(c,
+                        jobs_pr.append(ros_testbuild(c,
                                                     name,
                                                     source.repositories[name].url,
                                                     source.repositories[name].version,  # branch
@@ -272,7 +271,7 @@ def testbuilders_from_rosdistro(c, oracle, distro, builders, locks):
                                                     oracle.getOtherMirror('source', distro, code_name),
                                                     oracle.getKeys('source', distro), False, locks))
 
-    return jobs
+    return jobs_sources, jobs_pr
 
 ## @brief Create docbuilders from doc file
 ## @param c The Buildmasterconfig
@@ -287,13 +286,12 @@ def docbuilders_from_rosdistro(c, oracle, distro, builders):
 
     for name in doc.repositories.keys():
         if doc.repositories[name].type != 'git':
-            print('Cannot configure ros_debbuild for %s, as it is not a git repository' % name)
+            print('Cannot configure ros_docbuild for %s, as it is not a git repository' % name)
             continue
         for build_file in build_files:
             for os in build_file.get_target_os_names():
                 for code_name in build_file.get_target_os_code_names(os):
                     for arch in build_file.get_target_arches(os, code_name):
-                        print('Configuring ros_docbuild job for: %s_%s_%s' % (name, code_name, arch))
                         jobs.append(ros_docbuild(c,
                                                  name,
                                                  doc.repositories[name].url,

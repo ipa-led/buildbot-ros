@@ -11,7 +11,6 @@ from buildbot.steps.transfer import FileDownload
 from buildbot_ros_cfg.helpers import success
 from buildbot_ros_cfg.git_pr_poller import GitPRPoller
 
-
 ## @brief Testbuild jobs are used for CI testing of the source repo.
 ## @param c The Buildmasterconfig
 ## @param job_name Name for this job (typically the metapackage name)
@@ -29,7 +28,7 @@ def ros_testbuild(c, job_name, url, branch, distro, arch, rosdistro, machines,
     # Create a Job for Source
     
     if source:
-        project_name = '_'.join([job_name, rosdistro, 'testbuild'])
+        project_name = '_'.join([job_name, rosdistro, 'source_build'])
         c['change_source'].append(
             GitPoller(
                 repourl=url,
@@ -44,11 +43,44 @@ def ros_testbuild(c, job_name, url, branch, distro, arch, rosdistro, machines,
                 name=project_name,
                 builderNames=[project_name,],
                 change_filter=util.ChangeFilter(category=project_name)
-            )  
+            )
+        )
+        
+        c['schedulers'].append(
+            schedulers.Nightly(
+                name = project_name+'-nightly-master',
+                codebases = {url:{'repository':url,'branch':'master'}},
+                builderNames = [project_name,],
+                hour=3,
+                minute=00,
+            )
+        )
+        c['schedulers'].append(
+            schedulers.Nightly(
+                name = project_name+'-nightly-develop',
+                codebases = {url:{'repository':url,'branch':'develop'}},
+                builderNames = [project_name,],
+                hour=4,
+                minute=00,
+            )
+        )
+        
+        c['schedulers'].append(
+            schedulers.ForceScheduler(
+                name=project_name+'-force',
+                codebases = [util.CodebaseParameter("", 
+                        branch=util.ChoiceStringParameter(
+                            name="branch",
+                            choices=["master", "devel"],
+                            default="master"),
+                        repository=util.FixedParameter(name="repository", default=url),
+                        )],
+                builderNames=[project_name,],
+            )
         )
     else:
         r_owner, r_name = (url.split(':')[1])[:-4].split('/')
-        project_name = '_'.join([job_name, rosdistro, 'pr_testbuild'])
+        project_name = '_'.join([job_name, rosdistro, 'pr_build'])
         c['change_source'].append(
             GitPRPoller(
                 owner=r_owner,
