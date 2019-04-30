@@ -6,7 +6,7 @@ from buildbot.steps.transfer import FileUpload, FileDownload
 from buildbot.steps.trigger import Trigger
 from buildbot.steps.master import MasterShellCommand
 
-from helpers import success
+from buildbot_ros_cfg.helpers import success
 
 ## @brief Build a deb, from a source package found on launchpad
 ## @param c The Buildmasterconfig
@@ -36,7 +36,7 @@ def launchpad_debbuild(c, package, version, binaries, url, distro, arch, machine
             mastersrc = 'hooks/D05deps',
             workerdest = Interpolate('%(prop:builddir)s/hooks/D05deps'),
             hideStepIf = success,
-            mode = 0777 # make this executable for the cowbuilder
+            mode = 0o777 # make this executable for the cowbuilder
         )
     )
     # Update the cowbuilder

@@ -25,7 +25,6 @@ def run_build_and_test(workspace, rosdistro):
     apt_get_install(['python-rosdistro', 'python-catkin-pkg'])
     if not os.path.abspath("/usr/lib/pymodules/python2.7") in sys.path:
         sys.path.append("/usr/lib/pymodules/python2.7")
-    from rosdistro import get_index, get_index_url, get_source_file
     from catkin_pkg import packages
 
     # Find packages to build

@@ -9,7 +9,7 @@ from buildbot.steps.master import MasterShellCommand
 from buildbot.steps.worker import RemoveDirectory
 from buildbot.schedulers import triggerable
 
-from helpers import success
+from buildbot_ros_cfg.helpers import success
 
 ## @brief Debbuilds are used for building sourcedebs & binaries out of gbps and uploading to an APT repository
 ## @param c The Buildmasterconfig
@@ -73,7 +73,7 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
                 name = job_name+'-grab-build-source-deb-script',
                 mastersrc = 'scripts/build_source_deb.py',
                 workerdest = Interpolate('%(prop:builddir)s/build_source_deb.py'),
-                mode = 0755,
+                mode = 0o755,
                 hideStepIf = success
             )
         )
@@ -121,7 +121,7 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
                 mastersrc = 'hooks/D05deps',
                 workerdest = Interpolate('%(prop:builddir)s/hooks/D05deps'),
                 hideStepIf = success,
-                mode = 0777 # make this executable for the cowbuilder
+                mode = 0o777 # make this executable for the cowbuilder
             )
         )
         # Download script for building the binary deb
@@ -130,7 +130,7 @@ def ros_debbuild(c, job_name, packages, url, distro, arch, rosdistro, version, m
                 name = job_name+'-grab-build-binary-deb-script',
                 mastersrc = 'scripts/build_binary_deb.py',
                 workerdest = Interpolate('%(prop:builddir)s/build_binary_deb.py'),
-                mode = 0755,
+                mode = 0o755,
                 hideStepIf = success
             )
         )

@@ -153,7 +153,7 @@ class RosDistroOracle:
     ## @param build The type of the build, 'release', 'source', or 'doc'
     ## @param rosdistro The rosdistro name, 'groovy'
     ## @param distro The Ubuntu distro, 'precise'
-    def getBindMirrors(self, build, rosdistro, distro):
+    def getBindMirrors(self, build, rosdistro):
         build_file = self.build_files[rosdistro][build]
         if "_config" not in build_file._targets:
             print("No _config in %s build file -- this is probably not right." % build)

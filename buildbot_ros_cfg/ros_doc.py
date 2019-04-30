@@ -7,7 +7,7 @@ from buildbot.steps.transfer import DirectoryUpload, FileDownload
 from buildbot.steps.trigger import Trigger
 from buildbot.schedulers import triggerable
 
-from helpers import success
+from buildbot_ros_cfg.helpers import success
 
 ## @brief Docbuild jobs build the source documentation. This isn't the whold documentation
 ##        that is on the wiki, like message docs, just the source documentation part.

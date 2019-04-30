@@ -19,27 +19,27 @@
 # Extraneous code has been removed (e.g. commit-related methods).
 # A modification has been added using name to allow for multiple instances.
 
-import re
-import ast
+#import re
+#import ast
 
 from twisted.internet import defer
-from twisted.python import log
+#from twisted.python import log
 
 from buildbot.changes import base
 from buildbot.changes import github as github_c
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
-from buildbot.reporters import github as github_r
-from buildbot.process.properties import Properties
-from buildbot.process.results import CANCELLED
-from buildbot.process.results import EXCEPTION
-from buildbot.process.results import FAILURE
-from buildbot.process.results import RETRY
-from buildbot.process.results import SKIPPED
-from buildbot.process.results import SUCCESS
-from buildbot.process.results import WARNINGS
-from buildbot.util import unicode2NativeString
-from buildbot.util.giturlparse import giturlparse
+#from buildbot.reporters import github as github_r
+#from buildbot.process.properties import Properties
+#from buildbot.process.results import CANCELLED
+#from buildbot.process.results import EXCEPTION
+#from buildbot.process.results import FAILURE
+#from buildbot.process.results import RETRY
+#from buildbot.process.results import SKIPPED
+#from buildbot.process.results import SUCCESS
+#from buildbot.process.results import WARNINGS
+#from buildbot.util import unicode2NativeString
+#from buildbot.util.giturlparse import giturlparse
 
 
 class GitPRPoller(github_c.GitHubPullrequestPoller):
@@ -99,6 +99,7 @@ class GitPRPoller(github_c.GitHubPullrequestPoller):
         self.category = category if callable(category) else bytes2unicode(
         category)
 
+'''
 class GitHubStatusPushV2(github_r.GitHubStatusPush):
 
 
@@ -219,3 +220,4 @@ class GitHubStatusPushV2(github_r.GitHubStatusPush):
                         state=state, repoOwner=repoOwner, repoName=repoName,
                         sha=sha, issue=issue, context=context,
                         code=response.code, content=content))
+'''

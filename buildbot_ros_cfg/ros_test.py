@@ -52,7 +52,7 @@ def ros_testbuild(c, job_name, url, branch, distro, arch, rosdistro, machines,
                 codebases = {url:{'repository':url,'branch':'master'}},
                 builderNames = [project_name,],
                 hour=3,
-                minute=00,
+                minute=0,
             )
         )
         c['schedulers'].append(
@@ -61,7 +61,7 @@ def ros_testbuild(c, job_name, url, branch, distro, arch, rosdistro, machines,
                 codebases = {url:{'repository':url,'branch':'develop'}},
                 builderNames = [project_name,],
                 hour=4,
-                minute=00,
+                minute=0,
             )
         )
         
