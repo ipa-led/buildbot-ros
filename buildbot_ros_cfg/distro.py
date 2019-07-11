@@ -43,7 +43,7 @@ class RosDistroOracle:
                     continue
                 pkg_depends[pkg] = list()
                 deps_types={'buildtool', 'build', 'run', 'exec', 'test', 'build_export', 'doc'}
-                depends = walker.get_recursive_depends(pkg, deps_types)
+                depends = walker.get_recursive_depends(pkg, deps_types, True)
                 for dp in depends:
                     if dp in packages:
                         pkg_depends[pkg].append(dp)
