@@ -4,7 +4,7 @@
 #
 
 from __future__ import print_function
-from rosdistro import *
+from ros_buildfarm.config import get_index
 import subprocess, sys
 
 ## @brief Call a command
