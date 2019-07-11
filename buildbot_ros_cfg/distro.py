@@ -76,7 +76,8 @@ class RosDistroOracle:
                 self._insert(repo, depends, order)
 
             self.build_order[dist_name]['deb_jobs'] = order
-
+            
+            self.build_files[dist_name] = dict()
             self.build_files[dist_name]['release'] = get_release_build_files(self.index, dist_name)[0]
             self.build_files[dist_name]['source'] = get_source_build_files(self.index, dist_name)[0]
             self.build_files[dist_name]['doc'] = get_doc_build_files(self.index, dist_name)[0]
