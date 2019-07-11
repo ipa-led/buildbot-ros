@@ -3,14 +3,14 @@ from __future__ import print_function
 #print('# rosdistro.get_doc_file() has been deprecated in favor of the new function rosdistro.get_distribution_file() - please check that you have the latest versions of the Python tools (e.g. on Ubuntu/Debian use: sudo apt-get update && sudo apt-get install --only-upgrade python-bloom python-rosdep python-rosinstall python-rosinstall-generator)', file=sys.stderr)
 
 
-from rosdistro import get_cached_distribution, get_distribution_file
+from rosdistro import get_cached_distribution
 from rosdistro.dependency_walker import DependencyWalker
-import ros_buildfarm.config
 
 from buildbot_ros_cfg.ros_deb import ros_debbuild
 from buildbot_ros_cfg.ros_test import ros_testbuild
 from buildbot_ros_cfg.ros_doc import ros_docbuild
-from rosdistro.legacy import get_source_file, get_release_file, get_doc_file
+from rosdistro.legacy import get_source_file, get_release_file, get_doc_file,\
+                             get_doc_build_files, get_release_build_files, get_source_build_files
 
 ## @brief The Oracle tells you all you need to build stuff
 class RosDistroOracle:
@@ -42,9 +42,8 @@ class RosDistroOracle:
                 if dist.repositories[dist.release_packages[pkg].repository_name].release_repository.version == None:
                     continue
                 pkg_depends[pkg] = list()
-                depends = walker.get_depends(pkg, 'buildtool')
-                depends |= walker.get_depends(pkg, 'build')
-                depends |= walker.get_depends(pkg, 'run')
+                deps_types={'buildtool', 'build', 'run', 'exec', 'test', 'build_export', 'doc'}
+                depends = walker.get_recursive_depends(pkg, deps_types)
                 for dp in depends:
                     if dp in packages:
                         pkg_depends[pkg].append(dp)
@@ -78,14 +77,14 @@ class RosDistroOracle:
 
             self.build_order[dist_name]['deb_jobs'] = order
 
-            self.build_files[dist_name]['release'] = ros_buildfarm.config.get_release_build_files(self.index, dist_name)[0]
-            self.build_files[dist_name]['source'] = ros_buildfarm.config.get_source_build_files(self.index, dist_name)[0]
-            self.build_files[dist_name]['doc'] = ros_buildfarm.config.get_doc_build_files(self.index, dist_name)[0]
+            self.build_files[dist_name]['release'] = get_release_build_files(self.index, dist_name)[0]
+            self.build_files[dist_name]['source'] = get_source_build_files(self.index, dist_name)[0]
+            self.build_files[dist_name]['doc'] = get_doc_build_files(self.index, dist_name)[0]
 
             # build a list of doc jobs, all doc jobs must be released,
             # but not all released things should need to be documented
             self.build_order[dist_name]['doc_jobs'] = list()
-            doc = get_distribution_file(self.index, dist_name)
+            doc = get_doc_file(self.index, dist_name)
             print(doc)
             for repo in order:
                 if repo in doc.repositories.keys():
@@ -197,11 +196,8 @@ class RosDistroOracle:
 ## @param builders list of builders that this job can run on
 ## @returns A list of debbuilder names created
 def debbuilders_from_rosdistro(c, oracle, distro, builders, locks):
-    rel = get_distribution_file(oracle.getIndex(), distro)
-    print(rel)
     rel = get_release_file(oracle.getIndex(), distro)
-    print(rel)
-    build_files = ros_buildfarm.config.get_release_build_files(oracle.getIndex(), distro)
+    build_files = get_release_build_files(oracle.getIndex(), distro)
     jobs = list()
 
     for name in rel.repositories.keys():
@@ -242,12 +238,8 @@ def debbuilders_from_rosdistro(c, oracle, distro, builders, locks):
 ## @param tokens A dictionary of repo -> oauth_tokens, used for PR builders
 ## @returns A list of debbuilder names created
 def testbuilders_from_rosdistro(c, oracle, distro, builders, locks):
-
-    source = get_distribution_file(oracle.getIndex(), distro)
-    print(source)
     source = get_source_file(oracle.getIndex(), distro)
-    print(source)
-    build_files = ros_buildfarm.config.get_source_build_files(oracle.getIndex(), distro)
+    build_files = get_source_build_files(oracle.getIndex(), distro)
     jobs_sources = list()
     jobs_pr = list()
     for name in source.repositories.keys():
@@ -289,10 +281,8 @@ def testbuilders_from_rosdistro(c, oracle, distro, builders, locks):
 ## @param builders list of builders that this job can run on
 ## @returns A list of debbuilder names created
 def docbuilders_from_rosdistro(c, oracle, distro, builders):
-    doc = get_distribution_file(oracle.getIndex(), distro)
-    print(doc)
     doc = get_doc_file(oracle.getIndex(), distro)
-    build_files = ros_buildfarm.config.get_doc_build_files(oracle.getIndex(), distro)
+    build_files = get_doc_build_files(oracle.getIndex(), distro)
     jobs = list()
 
     for name in doc.repositories.keys():
